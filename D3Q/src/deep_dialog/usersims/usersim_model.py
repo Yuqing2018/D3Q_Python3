@@ -309,7 +309,7 @@ class ModelBasedSimulator(UserSimulator):
             # print act_slot_response
             if act_slot_response == action:
                 return i
-        raise Exception("action index not found")
+        # raise Exception("action index not found")
         return None
 
     def prepare_experience_replay(self, state_user, agent_action, state_user_next, reward, episode_over, user_action):

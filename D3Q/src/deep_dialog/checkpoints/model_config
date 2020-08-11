@@ -39,11 +39,11 @@ train_world_model: 1
 save_model: 1
 user_success_rate_threshold: 1
 agent_success_rate_threshold: 1
-pretrain_discriminator: 0
-discriminator_nn_type: MLP
-world_model_nn_type: MLP
+pretrain_discriminator: 1
+discriminator_nn_type: RNN
+world_model_nn_type: RNN
 train_discriminator: 1
-model_type: DQN
+model_type: D3Q
 filter_experience_by_discriminator: 1
 buffer_size_unit: 2000
 num_exp_store_per_episode_unit: 10

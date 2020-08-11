@@ -60,7 +60,7 @@ class AgentDQN(Agent):
 
         # replay buffer settings
         self.model_type = params['model_type']
-         self.size_unit = params['buffer_size_unit']
+        self.size_unit = params['buffer_size_unit']
         self.planning_steps = params['planning_steps']
         if params['planning_step_to_buffer']:
             if self.model_type == "DQN":
