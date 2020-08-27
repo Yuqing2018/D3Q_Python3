@@ -49,7 +49,7 @@ class AgentDQN(Agent):
         self.refine_state = True
         self.state_dimension = 2 * self.act_cardinality + 7 * self.slot_cardinality + 3 + self.max_turn
         if self.refine_state:
-            self.state_dimension = 213
+            self.state_dimension = 193
 
         self.dqn = DQN(self.state_dimension, self.hidden_size, self.num_actions)
         self.clone_dqn = copy.deepcopy(self.dqn)
@@ -64,20 +64,21 @@ class AgentDQN(Agent):
         self.planning_steps = params['planning_steps']
         if params['planning_step_to_buffer']:
             if self.model_type == "DQN":
-                self.max_user_buffer_size = self.size_unit * (self.planning_steps+1)
+                self.max_user_buffer_size = self.size_unit * (self.planning_steps + 1)
                 self.max_world_model_buffer_size = 0
             else:
                 # DDQ, D3Q
                 self.max_user_buffer_size = self.size_unit
                 self.max_world_model_buffer_size = self.size_unit * self.planning_steps
+
         else:
-            if self.model_type == "DQN":
-                self.max_user_buffer_size = self.size_unit
-                self.max_world_model_buffer_size = 0
-            else:
-                # DDQ, D3Q
-                self.max_user_buffer_size = self.size_unit
-                self.max_world_model_buffer_size = self.size_unit
+                if self.model_type == "DQN":
+                    self.max_user_buffer_size = self.size_unit
+                    self.max_world_model_buffer_size = 0
+                else:
+                    # DDQ, D3Q
+                    self.max_user_buffer_size = self.size_unit
+                    self.max_world_model_buffer_size = self.size_unit
         '''
         # Prediction Mode: load trained DQN model
         if params['trained_model_path'] != None:

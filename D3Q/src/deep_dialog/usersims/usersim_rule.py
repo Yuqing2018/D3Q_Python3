@@ -64,7 +64,7 @@ class RuleSimulator(UserSimulator):
         
         # sample first action
         user_action = self._sample_action()
-        assert (self.episode_over != 1),' but we just started'
+        assert (self.episode_over != 1,' but we just started')
         return user_action  
         
     def _sample_action(self):

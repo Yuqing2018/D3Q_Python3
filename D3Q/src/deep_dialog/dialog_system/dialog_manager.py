@@ -56,7 +56,7 @@ class DialogManager:
 
         if dialog_config.run_mode < 3:
             print ("New episode, user goal:")
-            print (json.dumps(self.user.goal, indent=2))
+            # print (json.dumps(self.user.goal, indent=2))
         self.print_function(user_action=self.user_action)
 
         self.agent.initialize_episode()
@@ -158,7 +158,6 @@ class DialogManager:
 
     def print_function(self, agent_action=None, user_action=None):
         """ Print Function """
-
         if agent_action:
             if dialog_config.run_mode == 0:
                 if self.agent.__class__.__name__ != 'AgentCmd':

@@ -41,7 +41,7 @@ class lstm(SeqToSeq):
         Cellin = np.zeros((n, d))
         Cellout = np.zeros((n, d))
     
-        for t in xrange(n):
+        for t in range(n):
             prev = np.zeros(d) if t==0 else Hout[t-1]
             Hin[t,0] = 1 # bias
             Hin[t, 1:1+xd] = Ws[t]

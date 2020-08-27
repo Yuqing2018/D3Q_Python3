@@ -77,6 +77,20 @@ feasible_actions = [
 
 ##############################
 # Full domain
+sys_dia_act_for_user = [
+'request',
+'inform',
+'confirm_question',
+'confirm_answer',
+'greeting',
+'closing',
+'multiple_choice',
+'thanks',
+'welcome',
+'deny',
+'not_sure'
+]
+
 sys_inform_slots_for_user = [
     'city',
     'closing',
@@ -152,22 +166,24 @@ for slot in sys_inform_slots:
 for slot in sys_request_slots:
     feasible_actions.append({'diaact': 'request', 'inform_slots': {}, 'request_slots': {slot: "UNK"}})
 
-feasible_actions_users = [
-    {'diaact': "thanks", 'inform_slots': {}, 'request_slots': {}},
-    {'diaact': "deny", 'inform_slots': {}, 'request_slots': {}},
-    {'diaact': "closing", 'inform_slots': {}, 'request_slots': {}},
-]
-
-for slot in sys_inform_slots_for_user:
-    feasible_actions_users.append({'diaact': 'inform', 'inform_slots': {slot: "PLACEHOLDER"}, 'request_slots': {}})
-
-feasible_actions_users.append(
-    {'diaact': 'inform', 'inform_slots': {'numberofpeople': "PLACEHOLDER"}, 'request_slots': {}})
-
+feasible_actions_users = []
+# [
+#     {'diaact': "thanks", 'inform_slots': {}, 'request_slots': {}},
+#     {'diaact': "deny", 'inform_slots': {}, 'request_slots': {}},
+#     {'diaact': "closing", 'inform_slots': {}, 'request_slots': {}},
+# ]
+for dia_act in sys_dia_act_for_user:
+    feasible_actions_users.append({'diaact': dia_act, 'inform_slots': {}, 'request_slots': {}})
+    for slot in sys_inform_slots_for_user:
+        feasible_actions_users.append({'diaact': dia_act, 'inform_slots': {slot: "PLACEHOLDER"}, 'request_slots': {}})
+    for slot in sys_request_slots_for_user:
+        feasible_actions_users.append({'diaact': dia_act, 'inform_slots': {}, 'request_slots': {slot: "UNK"}})
+# feasible_actions_users.append({'diaact': 'inform', 'inform_slots': {'numberofpeople': "PLACEHOLDER"}, 'request_slots': {}})
 ############################################################################
 #   Adding the request actions
 ############################################################################
-for slot in sys_request_slots_for_user:
-    feasible_actions_users.append({'diaact': 'request', 'inform_slots': {}, 'request_slots': {slot: "UNK"}})
 
-feasible_actions_users.append({'diaact': 'inform', 'inform_slots': {}, 'request_slots': {}})
+# for slot in sys_request_slots_for_user:
+#     feasible_actions_users.append({'diaact': dia_act, 'inform_slots': {}, 'request_slots': {slot: "UNK"}})
+
+# feasible_actions_users.append({'diaact': 'inform', 'inform_slots': {}, 'request_slots': {}})

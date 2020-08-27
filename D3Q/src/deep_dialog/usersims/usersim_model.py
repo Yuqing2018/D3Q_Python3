@@ -193,11 +193,11 @@ class ModelBasedSimulator(UserSimulator):
         self.total_loss_for_ge = 0
         dis_idx = 0
         for iter_batch in range(num_batches):
-            batch = [random.choice(self.training_examples) for i in xrange(batch_size)]
+            batch = [random.choice(list(self.training_examples)) for i in range(batch_size)]
             np_batch = []
             for x in range(6):
                 v = []
-                for i in xrange(len(batch)):
+                for i in range(len(batch)):
                     v.append(batch[i][x])
                 np_batch.append(np.vstack(v))
             # print np_batch[0].shape, np_batch[2].shape
@@ -260,8 +260,8 @@ class ModelBasedSimulator(UserSimulator):
                 else:
                     action['inform_slots'][slots] = dialog_config.I_DO_NOT_CARE
         response_action = action
-
-
+        response_action['turn'] = self.state['turn']
+        self.add_nl_to_action(response_action)
         term = term[0][0] > 0.5
 
         reward = reward[0][0]
@@ -338,9 +338,13 @@ class ModelBasedSimulator(UserSimulator):
     def register_experience_replay_tuple(self, s_t, agent_a_t, s_tplus1, reward, term, user_a_t):
         """ Register feedback from the environment, to be stored as future training data """
 
+        # 1 * 192
         state_t_rep = self.prepare_state_representation(s_t)
+        # 1 * 58
         g = self.prepare_user_goal_representation(self.sample_goal)
+        # 1 * 250
         state_t_rep = np.hstack([state_t_rep, g])
+        # 19
         agent_action_t = agent_a_t
         user_action_t = user_a_t
 
@@ -363,7 +367,7 @@ class ModelBasedSimulator(UserSimulator):
 
         if len(self.training_examples) > self.max_buffer_size:
             self.training_examples = self.training_examples[-self.max_buffer_size:]
-
+    # 每个状态转换为向量
     def prepare_state_representation(self, state):
         """ Create the representation for each state """
 

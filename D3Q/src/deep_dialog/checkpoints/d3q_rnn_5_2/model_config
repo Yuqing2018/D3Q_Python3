@@ -28,7 +28,7 @@ warm_start: 1
 warm_start_epochs: 50
 planning_steps: 4
 trained_model_path: None
-write_model_dir: ./deep_dialog/checkpoints/d3q_rnn_5_1
+write_model_dir: ./deep_dialog/checkpoints/d3q_rnn_5_2
 save_check_point: 10
 success_rate_threshold: 0.6
 split_fold: 5

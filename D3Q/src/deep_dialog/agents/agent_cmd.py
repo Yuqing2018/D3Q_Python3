@@ -29,7 +29,7 @@ class AgentCmd(Agent):
         user_action = state['user_action']
         # get input from the command line
         print ("Turn", user_action['turn'] + 1, "sys:",)
-        command = raw_input()
+        command = input()
         
         if self.agent_input_mode == 0: # nl
             act_slot_value_response = self.generate_diaact_from_nl(command)

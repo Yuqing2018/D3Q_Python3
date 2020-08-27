@@ -72,14 +72,14 @@ if __name__ == "__main__":
     parser.add_argument('--split_fold', dest='split_fold', default=5, type=int, help='the number of folders to split the user goal')
     parser.add_argument('--learning_phase', dest='learning_phase', default='all', type=str, help='train/test/all; default is all')
     parser.add_argument('--grounded', dest='grounded', type=int, default=False, help='planning with ground truth')
-    parser.add_argument('--boosted', dest='boosted', type=int, default=True, help='boost planner')
-    parser.add_argument('--train_world_model', dest='train_world_model', type=int, default=1, help='train_world_model or not')
+    parser.add_argument('--boosted', dest='boosted', type=int, default=True, help='boost planner ')
+    parser.add_argument('--train_world_model', dest='train_world_model', type=int, default=0, help='train_world_model or not')
     parser.add_argument('--save_model', dest='save_model', type=int, default=1, help='whether to save models')
     parser.add_argument('--user_success_rate_threshold', dest='user_success_rate_threshold', type=float, default=1, help='success rate threshold for user model')
     parser.add_argument('--agent_success_rate_threshold', dest='agent_success_rate_threshold', type=float, default=1, help='success rate threshold for agent model')
     parser.add_argument('--pretrain_discriminator', dest='pretrain_discriminator', type=int, default=1, help='whether to pretrain the discriminator')
-    parser.add_argument('--discriminator_nn_type', dest='discriminator_nn_type', type=str, default='RNN', help='NN model structure of the discriminator [MLP, RNN]')
-    parser.add_argument('--world_model_nn_type', dest='world_model_nn_type', type=str, default='RNN', help='NN model structure of the discriminator [MLP]')
+    parser.add_argument('--discriminator_nn_type', dest='discriminator_nn_type', type=str, default='MLP', help='NN model structure of the discriminator [MLP, RNN]')
+    parser.add_argument('--world_model_nn_type', dest='world_model_nn_type', type=str, default='MLP', help='NN model structure of the discriminator [MLP]')
     parser.add_argument('--train_discriminator', dest='train_discriminator', type=int, default=1, help='whether to train the discriminator')
     parser.add_argument('--model_type', dest='model_type', type=str, default='D3Q', help='model type [DQN, DDQ, D3Q]')
     parser.add_argument('--filter_experience_by_discriminator', dest='filter_experience_by_discriminator', type=int, default=1, help='whether to filter the fake experiences by the discriminator')
@@ -107,10 +107,20 @@ def convertFile(originPath):
     print("successfully! ")
     return destiPath
 
+def ResetParams(train_model_type):
+    old_model_path = './deep_dialog/checkpoints/' + train_model_type + '/'
+    with open(os.path.join(old_model_path, "model_config"), "r") as f:
+        for arg in vars(args):
+            value = getattr(args, arg)
+            print(arg,type(value))
+
+            params[arg] = getattr(args, arg)
+            # f.write("{}: {}\n".format(arg, str(getattr(args, arg))))
+        f.close()
 seed = 2
 numpy.random.seed(seed)
 random.seed(seed)
-
+ResetParams("d3q_rnn_5_1")
 max_turn = params['max_turn']
 num_episodes = params['episodes']
 
@@ -631,6 +641,8 @@ def warm_start_simulation():
                 if episode_over:
                     if reward > 0:
                         successes += 1
+                        if episode == 99:
+                            print("开始调试：")
                         print ("warm_start simulation episode %s: Success" % (episode))
                     else: print ("warm_start simulation episode %s: Fail" % (episode))
                     cumulative_turns += dialog_manager.state_tracker.turn_count
@@ -699,6 +711,7 @@ def run_episodes(count, status):
         # simulation_epoch_size = planning_steps + 1
         if params['model_type'] == 'D3Q' and episode == 0:
             simulation_epoch_with_gan_control_filter(3, True)
+        else:
             simulation_epoch_with_gan_control_filter(3, False)
 
         # update fixed target network

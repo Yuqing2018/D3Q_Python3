@@ -34,7 +34,7 @@ class ModelBasedSimulator(UserSimulator):
 
         self.learning_phase = params['learning_phase']
 
-        print 'building user simulator model'
+        print('building user simulator model')
 
         self.model = ModelBasedUsersimulator(2*(2 * self.slot_cardinality + self.act_cardinality) + 2 * self.slot_cardinality, 80, self.act_cardinality, 2 * self.slot_cardinality)
 
@@ -45,7 +45,7 @@ class ModelBasedSimulator(UserSimulator):
         assert len(self.training_goal_ids) == len(self.start_set['all'])
 
         self.id_goals = dict(zip(self.training_goal_ids, self.start_set['all']))
-        for e in xrange(400):
+        for e in range(400):
             cost = 0
             for i in self.id_goals.items()[0:170]:
                 if len(self.training_corpus[i[0]]) < 2 or len(i[1]) < 2:
@@ -57,7 +57,7 @@ class ModelBasedSimulator(UserSimulator):
                 y_diaact = np.vstack(y_diaact)
                 y_slots = np.vstack(y_slots)
                 cost += self.model.train(x, y_diaact, y_slots)
-            print cost
+            print(cost)
         # sys.exit(1)
         self.evalute_simulator_on_validation()
 
@@ -93,19 +93,19 @@ class ModelBasedSimulator(UserSimulator):
             #     c_slot_all += num_slots
             acc_diaact_all += sum(diaact_idx == np.argmax(y_diaact, axis=1))
             c_diaact_all += x.shape[0]
-        print acc_slot_all, c_slot_all, acc_diaact_all, c_diaact_all
+        print (acc_slot_all, c_slot_all, acc_diaact_all, c_diaact_all)
         slots_predict = np.vstack(slots_predict)
         slots_groundtruth = np.vstack(slots_groundtruth)
 
-        for i in xrange(slots_predict.shape[1]):
+        for i in range(slots_predict.shape[1]):
 
             acc = slots_predict[:,i].astype(np.int32) & slots_groundtruth[:,i].astype(np.int32)
             acc = acc.sum()
-            print acc,
+            print (acc)
             if slots_predict[:,i].sum() != 0:
-                print float(acc) / slots_predict[:,i].sum(), acc /  slots_groundtruth[:,i].sum()
+                print( float(acc) / slots_predict[:,i].sum(), acc /  slots_groundtruth[:,i].sum())
             else:
-                print 0, acc /  slots_groundtruth[:,i].sum()
+                print( 0, acc /  slots_groundtruth[:,i].sum())
 
         sys.exit(1)
 
@@ -123,7 +123,7 @@ class ModelBasedSimulator(UserSimulator):
 
         return self.user_goal_representation
 
-    def prepare_state_representation_per_step(self, message):
+    def   prepare_state_representation_per_step(self, message):
         # by default the first utterance is issued from agent side, e.g. say greeting
         # the sendond one is from user side saying moviename, need to refine the dialgoue sessions to add this two utterance
 

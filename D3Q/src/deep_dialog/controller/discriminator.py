@@ -34,9 +34,9 @@ class Discriminator(nn.Module):
         self.num_actions_user = len(self.feasible_actions_users)
 
         self.max_turn = params['max_turn'] + 5
-        self.state_dimension = 213
+        self.state_dimension = 193
         self.hidden_size = hidden_size
-        self.cell_state_dimension = 213
+        self.cell_state_dimension = 193
         self.nn_type = nn_type
         self.threshold_upperbound = 0.55
         self.threshold_lowerbound = 0.45

@@ -169,10 +169,7 @@ class nlu:
         
             # rule for request
             if len(diaact['request_slots'])>0: diaact['diaact'] = 'request'
-    
-    
-    
-    
+
     def diaact_penny_string(self, dia_act):
         """ Convert the Dia-Act into penny string """
         
