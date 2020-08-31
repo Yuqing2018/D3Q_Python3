@@ -28,7 +28,7 @@
   },
   {
     "request_slots": {
-      "tic/**/ket": "UNK"
+      "ticket": "UNK"
     },
     "inform_slots": {
       "date": "tomorrow",
