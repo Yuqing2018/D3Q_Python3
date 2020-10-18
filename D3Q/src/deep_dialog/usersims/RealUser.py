@@ -1,10 +1,5 @@
-import os
-import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-
-
 import argparse, json, random, copy
-from deep_dialog.usersims.usersim import UserSimulator
+from deep_dialog.usersims import UserSimulator
 from deep_dialog import dialog_config
 
 class RealUser(UserSimulator):
@@ -45,43 +40,29 @@ class RealUser(UserSimulator):
         self.dialog_status = dialog_config.NO_OUTCOME_YET
 
         # self.goal =  random.choice(self.start_set)
-        self.goal = self._sample_goal()
-        self.goal['request_slots']['ticket'] = 'UNK'
+        # self.goal = self._sample_goal()
+        # self.goal['request_slots']['ticket'] = 'UNK'
         self.constraint_check = dialog_config.CONSTRAINT_CHECK_FAILURE
+        user_action = self.get_user_action_from_cmd()
 
-        user_action = self._sample_action()
+        self.state['diaact'] = user_action['diaact']
+        if (self.state['diaact'] in ['thanks','closing']): self.episode_over = True #episode_over = True
+        else: self.episode_over = False
+
+        user_action['turn'] = 0
+        self.state['inform_slots'] = user_action['inform_slots']
+        self.state['request_slots'] = user_action['request_slots']
+        self.state['rest_slots'] = []
         assert (self.episode_over != 1, ' but we just started')
         return user_action
 
-    def _sample_goal(self):
-        """ sample a user goal  """
+    def get_user_action_from_cmd(self):
+        """   """
         command = input()
         if self.user_input_mode == 0:  # nl
-            real_goal = self.generate_diaact_from_nl(command)
+            user_action = self.generate_diaact_from_nl(command)
 
-        return real_goal
-
-    def _sample_action(self):
-        self.state['diaact'] = self.goal['diaact']
-        self.state['inform_slots'] = self.goal['inform_slots']
-        self.state['rest_slots'].extend(self.goal['request_slots'].keys())
-        self.state['request_slots'] = self.goal['request_slots']
-
-        if len(self.state['request_slots']) == 0:
-            self.state['diaact'] = 'inform'
-
-        if (self.state['diaact'] in ['thanks', 'closing']):
-            self.episode_over = True  # episode_over = True
-        else:
-            self.episode_over = False  # episode_over = False
-
-        sample_action = {}
-        sample_action['diaact'] = self.state['diaact']
-        sample_action['inform_slots'] = self.state['inform_slots']
-        sample_action['request_slots'] = self.state['request_slots']
-        sample_action['turn'] = self.state['turn']
-        sample_action['nl'] = self.goal['nl']
-        return sample_action
+        return user_action
 
     def generate_diaact_from_nl(self, string):
         """ Generate Dia_Act Form with NLU """
@@ -153,7 +134,6 @@ class RealUser(UserSimulator):
 
         sys_act = system_action['diaact']
 
-        self.goal = self._sample_goal()
         if (self.max_turn > 0 and self.state['turn'] > self.max_turn):
             self.dialog_status = dialog_config.FAILED_DIALOG
             self.episode_over = True
@@ -183,7 +163,7 @@ class RealUser(UserSimulator):
         response_action['inform_slots'] = self.state['inform_slots']
         response_action['request_slots'] = self.state['request_slots']
         response_action['turn'] = self.state['turn']
-        response_action['nl'] = ""
+        response_action['nl'] = self.state['nl']
 
         # add NL to dia_act
         # self.add_nl_to_action(response_action)
@@ -235,9 +215,6 @@ class RealUser(UserSimulator):
         for info_slot in self.state['history_slots'].keys():
             if self.state['history_slots'][info_slot] == dialog_config.NO_VALUE_MATCH:
                 self.dialog_status = dialog_config.FAILED_DIALOG
-            if info_slot in self.goal['inform_slots'].keys():
-                if self.state['history_slots'][info_slot] != self.goal['inform_slots'][info_slot]:
-                    self.dialog_status = dialog_config.FAILED_DIALOG
 
         if 'ticket' in system_action['inform_slots'].keys():
             if system_action['inform_slots']['ticket'] == dialog_config.NO_VALUE_MATCH:
@@ -248,41 +225,49 @@ class RealUser(UserSimulator):
 
     def response_request(self, system_action):
         """ Response for Request (System Action) """
-        if len(system_action['request_slots'].keys()) > 0:
-            slot = list(system_action['request_slots'].keys())[0]  # only one slot
-            if slot in self.goal['inform_slots'].keys():  # request slot in user's constraints  #and slot not in self.state['request_slots'].keys():
-                self.state['inform_slots'][slot] = self.goal['inform_slots'][slot]
-                self.state['diaact'] = "inform"
-                if slot in self.state['rest_slots']: self.state['rest_slots'].remove(slot)
-                if slot in self.state['request_slots'].keys(): del self.state['request_slots'][slot]
-                self.state['request_slots'].clear()
-            elif slot in self.goal['request_slots'].keys() and slot not in self.state['rest_slots'] and slot in \
-                    self.state['history_slots'].keys():  # the requested slot has been answered
-                self.state['inform_slots'][slot] = self.state['history_slots'][slot]
-                self.state['request_slots'].clear()
-                self.state['diaact'] = "inform"
-            elif slot in self.goal['request_slots'].keys() and slot in self.state[
-                'rest_slots']:  # request slot in user's goal's request slots, and not answered yet
-                self.state['diaact'] = "request"  # "confirm_question"
-                self.state['request_slots'][slot] = "UNK"
+        user_action = self.get_user_action_from_cmd()
+        for slot in user_action['request_slots'].keys():
+            self.state['request_slots'][slot] = user_action['request_slots'][slot]
+        for slot in user_action['inform_slots'].keys():
+            self.state['inform_slots'][slot] = user_action['inform_slots'][slot]
+        self.state['diaact'] = user_action['diaact']
+        self.state['nl'] = user_action['nl']
 
-
-                ########################################################################
-                # Inform the rest of informable slots
-                ########################################################################
-                for info_slot in self.state['rest_slots']:
-                    if info_slot in self.goal['inform_slots'].keys():
-                        self.state['inform_slots'][info_slot] = self.goal['inform_slots'][info_slot]
-
-                for info_slot in self.state['inform_slots'].keys():
-                    if info_slot in self.state['rest_slots']:
-                        self.state['rest_slots'].remove(info_slot)
-            else:
-                if len(self.state['request_slots']) == 0 and len(self.state['rest_slots']) == 0:
-                    self.state['diaact'] = "thanks"
-                else:
-                    self.state['diaact'] = "inform"
-                self.state['inform_slots'][slot] = dialog_config.I_DO_NOT_CARE
+        # if len(system_action['request_slots'].keys()) > 0:
+        #     slot = list(system_action['request_slots'].keys())[0]  # only one slot
+        #     if slot in self.goal['inform_slots'].keys():  # request slot in user's constraints  #and slot not in self.state['request_slots'].keys():
+        #         self.state['inform_slots'][slot] = self.goal['inform_slots'][slot]
+        #         self.state['diaact'] = "inform"
+        #         if slot in self.state['rest_slots']: self.state['rest_slots'].remove(slot)
+        #         if slot in self.state['request_slots'].keys(): del self.state['request_slots'][slot]
+        #         self.state['request_slots'].clear()
+        #     elif slot in self.goal['request_slots'].keys() and slot not in self.state['rest_slots'] and slot in \
+        #             self.state['history_slots'].keys():  # the requested slot has been answered
+        #         self.state['inform_slots'][slot] = self.state['history_slots'][slot]
+        #         self.state['request_slots'].clear()
+        #         self.state['diaact'] = "inform"
+        #     elif slot in self.goal['request_slots'].keys() and slot in self.state[
+        #         'rest_slots']:  # request slot in user's goal's request slots, and not answered yet
+        #         self.state['diaact'] = "request"  # "confirm_question"
+        #         self.state['request_slots'][slot] = "UNK"
+        #
+        #
+        #         ########################################################################
+        #         # Inform the rest of informable slots
+        #         ########################################################################
+        #         for info_slot in self.state['rest_slots']:
+        #             if info_slot in self.goal['inform_slots'].keys():
+        #                 self.state['inform_slots'][info_slot] = self.goal['inform_slots'][info_slot]
+        #
+        #         for info_slot in self.state['inform_slots'].keys():
+        #             if info_slot in self.state['rest_slots']:
+        #                 self.state['rest_slots'].remove(info_slot)
+        #     else:
+        #         if len(self.state['request_slots']) == 0 and len(self.state['rest_slots']) == 0:
+        #             self.state['diaact'] = "thanks"
+        #         else:
+        #             self.state['diaact'] = "inform"
+        #         self.state['inform_slots'][slot] = dialog_config.I_DO_NOT_CARE
 
     def response_multiple_choice(self, system_action):
         """ Response for Multiple_Choice (System Action) """
@@ -311,91 +296,17 @@ class RealUser(UserSimulator):
                 if 'ticket' in self.state['rest_slots']: self.state['rest_slots'].remove('ticket')
                 if 'ticket' in self.state['request_slots'].keys(): del self.state['request_slots']['ticket']
 
-            for slot in self.goal['inform_slots'].keys():
-                #  Deny, if the answers from agent can not meet the constraints of user
-                if slot not in system_action['inform_slots'].keys() or (
-                        self.goal['inform_slots'][slot].lower() != system_action['inform_slots'][slot].lower()):
-                    self.state['diaact'] = "deny"
-                    self.state['request_slots'].clear()
-                    self.state['inform_slots'].clear()
-                    self.constraint_check = dialog_config.CONSTRAINT_CHECK_FAILURE
-                    break
         else:
             for slot in system_action['inform_slots'].keys():
                 self.state['history_slots'][slot] = system_action['inform_slots'][slot]
 
-                if slot in self.goal['inform_slots'].keys():
-                    if system_action['inform_slots'][slot] == self.goal['inform_slots'][slot]:
-                        if slot in self.state['rest_slots']: self.state['rest_slots'].remove(slot)
-
-                        if len(self.state['request_slots']) > 0:
-                            self.state['diaact'] = "request"
-                        elif len(self.state['rest_slots']) > 0:
-                            rest_slot_set = copy.deepcopy(self.state['rest_slots'])
-                            if 'ticket' in rest_slot_set:
-                                rest_slot_set.remove('ticket')
-
-                            if len(rest_slot_set) > 0:
-                                inform_slot = random.choice(rest_slot_set)  # self.state['rest_slots']
-                                if inform_slot in self.goal['inform_slots'].keys():
-                                    self.state['inform_slots'][inform_slot] = self.goal['inform_slots'][inform_slot]
-                                    self.state['diaact'] = "inform"
-                                    self.state['rest_slots'].remove(inform_slot)
-                                elif inform_slot in self.goal['request_slots'].keys():
-                                    self.state['request_slots'][inform_slot] = 'UNK'
-                                    self.state['diaact'] = "request"
-                            else:
-                                self.state['request_slots']['ticket'] = 'UNK'
-                                self.state['diaact'] = "request"
-                        else:  # how to reply here?
-                            self.state['diaact'] = "thanks"  # replies "closing"? or replies "confirm_answer"
-                    else:  # != value  Should we deny here or ?
-                        ########################################################################
-                        # TODO When agent informs(slot=value), where the value is different with the constraint in user goal, Should we deny or just inform the correct value?
-                        ########################################################################
-                        self.state['diaact'] = "inform"
-                        self.state['inform_slots'][slot] = self.goal['inform_slots'][slot]
-                        if slot in self.state['rest_slots']: self.state['rest_slots'].remove(slot)
-                else:
-                    if slot in self.state['rest_slots']:
-                        self.state['rest_slots'].remove(slot)
-                    if slot in self.state['request_slots'].keys():
-                        del self.state['request_slots'][slot]
-
-                    if len(self.state['request_slots']) > 0:
-                        request_set = list(self.state['request_slots'].keys())
-                        if 'ticket' in request_set:
-                            request_set.remove('ticket')
-
-                        if len(request_set) > 0:
-                            request_slot = random.choice(request_set)
-                        else:
-                            request_slot = 'ticket'
-                        self.state['request_slots'][request_slot] = "UNK"
-                        self.state['diaact'] = "request"
-                    elif len(self.state['rest_slots']) > 0:
-                        rest_slot_set = copy.deepcopy(self.state['rest_slots'])
-                        if 'ticket' in rest_slot_set:
-                            rest_slot_set.remove('ticket')
-
-                        if len(rest_slot_set) > 0:
-                            inform_slot = random.choice(rest_slot_set)  # self.state['rest_slots']
-                            if inform_slot in self.goal['inform_slots'].keys():
-                                self.state['inform_slots'][inform_slot] = self.goal['inform_slots'][inform_slot]
-                                self.state['diaact'] = "inform"
-                                self.state['rest_slots'].remove(inform_slot)
-
-                                if 'ticket' in self.state['rest_slots']:
-                                    self.state['request_slots']['ticket'] = 'UNK'
-                                    self.state['diaact'] = "request"
-                            elif inform_slot in self.goal['request_slots'].keys():
-                                self.state['request_slots'][inform_slot] = self.goal['request_slots'][inform_slot]
-                                self.state['diaact'] = "request"
-                        else:
-                            self.state['request_slots']['ticket'] = 'UNK'
-                            self.state['diaact'] = "request"
-                    else:
-                        self.state['diaact'] = "thanks"  # or replies "confirm_answer"
+        user_action = self.get_user_action_from_cmd()
+        for slot in user_action['request_slots'].keys():
+            self.state['request_slots'][slot] = user_action['request_slots'][slot]
+        for slot in user_action['inform_slots'].keys():
+            self.state['inform_slots'][slot] = user_action['inform_slots'][slot]
+        self.state['diaact'] = user_action['diaact']
+        self.state['nl'] = user_action['nl']
 
     def state_to_action(self, state):
         """ Generate an action by getting input interactively from the command line """

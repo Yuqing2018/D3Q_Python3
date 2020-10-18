@@ -29,7 +29,7 @@ class KBHelper:
         Returns:
         filled_in_slots             --  A dictionary of form {slot1:value1, slot2:value2} for each sloti in inform_slots_to_be_filled
         """
-        
+        # 獲取可用的kb results 信息。
         kb_results = self.available_results_from_kb(current_slots)
         if dialog_config.auto_suggest == 1:
             print('Number of movies in KB satisfying current constraints: ', len(kb_results))
@@ -65,7 +65,7 @@ class KBHelper:
            
         return filled_in_slots
 
-
+    # get slot value的可選值
     def available_slot_values(self, slot, kb_results):
         """ Return the set of values available for the slot based on the current constraints """
         
@@ -78,6 +78,7 @@ class KBHelper:
                 else: slot_values[slot_val] = 1
         return slot_values
 
+    # 獲取滿足當前限制條件的 電影信息列表dict
     def available_results_from_kb(self, current_slots):
         """ Return the available movies in the movie_kb based on the current constraints """
         
@@ -132,13 +133,14 @@ class KBHelper:
 
         ret_result = dict(ret_result)
         return ret_result
-    
+
+    # 獲取滿足inform——slots 條件的kb results count dict
     def available_results_from_kb_for_slots(self, inform_slots):
         """ Return the count statistics for each constraint in inform_slots """
         
         kb_results = {key:0 for key in inform_slots.keys()}
         kb_results['matching_all_constraints'] = 0
-        return kb_results
+        # return kb_results
         
         query_idx_keys = frozenset(inform_slots.items())
         cached_kb_slot_ret = self.cached_kb_slot[query_idx_keys]
@@ -149,7 +151,7 @@ class KBHelper:
         for movie_id in self.movie_dictionary.keys():
             all_slots_match = 1
             for slot in inform_slots.keys():
-                if slot == 'ticket' or inform_slots[slot] == dialog_config.I_DO_NOT_CARE:
+                if slot == 'numberofpeople' or slot == 'ticket' or inform_slots[slot] == dialog_config.I_DO_NOT_CARE:
                     continue
 
                 if slot in self.movie_dictionary[movie_id].keys():

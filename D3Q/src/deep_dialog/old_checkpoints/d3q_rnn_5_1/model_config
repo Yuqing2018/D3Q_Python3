@@ -5,7 +5,7 @@ controller: 0
 diaact_nl_pairs: ./deep_dialog/data/dia_act_nl_pairs.v6.json
 save_check_point: 10
 episodes: 500
-predict_mode: False
+predict_mode: True
 domain_extension_exp: 0
 planning_steps: 4
 train_discriminator: 1
@@ -14,15 +14,15 @@ cmd_input_mode: 0
 goal_file_path: ./deep_dialog/data/user_goals_first_turn_template.part.movie.v1.p
 max_turn: 40
 discriminator_nn_type: RNN
-grounded: False
+grounded: True
 experience_replay_pool_size: 10000
 filter_experience_by_discriminator: 1
 write_model_dir: ./deep_dialog/checkpoints/test_d3q_rnn_5_ws50_seed_2_1
-usr: 1
+usr: 0
 boosted: 1
 auto_suggest: 0
 run_mode: 3
-trained_model_path: None
+trained_model_path: D3Q/src/deep_dialog/old_checkpoints/d3q_rnn_5_1/dqn.model.epoch_final.ckpt
 train_planner: 1
 buffer_size_unit: 2000
 success_rate_threshold: 0.6

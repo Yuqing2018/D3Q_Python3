@@ -2,7 +2,7 @@ import argparse, json, copy, os
 import pickle
 from deep_dialog.dialog_system import DialogManager, text_to_dict
 from deep_dialog.agents import AgentCmd, InformAgent, RequestAllAgent, RandomAgent, EchoAgent, RequestBasicsAgent, AgentDQN
-from deep_dialog.usersims import RuleSimulator, ModelBasedSimulator
+from deep_dialog.usersims import RuleSimulator, ModelBasedSimulator, RealUser
 from deep_dialog.controller import  Discriminator
 
 from deep_dialog import dialog_config
@@ -31,14 +31,14 @@ if __name__ == "__main__":
     parser.add_argument('--goal_file_path', dest='goal_file_path', type=str, default='./deep_dialog/data/user_goals_first_turn_template.part.movie.v1.p', help='a list of user goals')
     parser.add_argument('--diaact_nl_pairs', dest='diaact_nl_pairs', type=str, default='./deep_dialog/data/dia_act_nl_pairs.v6.json', help='path to the pre-defined dia_act&NL pairs')
 
-    parser.add_argument('--max_turn', dest='max_turn', default=20, type=int, help='maximum length of each dialog (default=20, 0=no maximum length)')
-    parser.add_argument('--episodes', dest='episodes', default=1, type=int, help='Total number of episodes to run (default=1)')
+    parser.add_argument('--max_turn', dest='max_turn', default=40, type=int, help='maximum length of each dialog (default=20, 0=no maximum length)')
+    parser.add_argument('--episodes', dest='episodes', default=2, type=int, help='Total number of episodes to run (default=1)')
     parser.add_argument('--slot_err_prob', dest='slot_err_prob', default=0.05, type=float, help='the slot err probability')
     parser.add_argument('--slot_err_mode', dest='slot_err_mode', default=0, type=int, help='slot_err_mode: 0 for slot_val only; 1 for three errs')
     parser.add_argument('--intent_err_prob', dest='intent_err_prob', default=0.05, type=float, help='the intent err probability')
 
     parser.add_argument('--agt', dest='agt', default=9, type=int, help='Select an agent: 0 for a command line input, 1-6 for rule based agents')
-    parser.add_argument('--usr', dest='usr', default=1, type=int, help='Select a user simulator. 0 is a Frozen user simulator.')
+    parser.add_argument('--usr', dest='usr', default=0, type=int, help='Select a user simulator. 0 is a Frozen user simulator.')
 
     parser.add_argument('--epsilon', dest='epsilon', type=float, default=0.00, help='Epsilon to determine stochasticity of epsilon-greedy agent policies')
 
@@ -48,22 +48,22 @@ if __name__ == "__main__":
 
     parser.add_argument('--act_level', dest='act_level', type=int, default=0, help='0 for dia_act level; 1 for NL level')
     parser.add_argument('--run_mode', dest='run_mode', type=int, default=0, help='run_mode: 0 for default NL; 1 for dia_act; 2 for both')
-    parser.add_argument('--auto_suggest', dest='auto_suggest', type=int, default=0, help='0 for no auto_suggest; 1 for auto_suggest')
+    parser.add_argument('--auto_suggest', dest='auto_suggest', type=int, default=1, help='0 for no auto_suggest; 1 for auto_suggest')
     parser.add_argument('--cmd_input_mode', dest='cmd_input_mode', type=int, default=0, help='run_mode: 0 for NL; 1 for dia_act')
 
     # RL agent parameters
     parser.add_argument('--experience_replay_pool_size', dest='experience_replay_pool_size', type=int, default=1000, help='the size for experience replay')
-    parser.add_argument('--dqn_hidden_size', dest='dqn_hidden_size', type=int, default=60, help='the hidden size for DQN')
+    parser.add_argument('--dqn_hidden_size', dest='dqn_hidden_size', type=int, default=80, help='the hidden size for DQN')
     parser.add_argument('--batch_size', dest='batch_size', type=int, default=16, help='batch size')
     parser.add_argument('--gamma', dest='gamma', type=float, default=0.9, help='gamma for DQN')
-    parser.add_argument('--predict_mode', dest='predict_mode', type=bool, default=False, help='predict model for DQN')
+    parser.add_argument('--predict_mode', dest='predict_mode', type=bool, default=True, help='predict model for DQN')
     parser.add_argument('--simulation_epoch_size', dest='simulation_epoch_size', type=int, default=50, help='the size of validation set')
-    parser.add_argument('--warm_start', dest='warm_start', type=int, default=1, help='0: no warm start; 1: warm start for training')
+    parser.add_argument('--warm_start', dest='warm_start', type=int, default=0, help='0: no warm start; 1: warm start for training')
     parser.add_argument('--warm_start_epochs', dest='warm_start_epochs', type=int, default=100, help='the number of epochs for warm start')
     parser.add_argument('--planning_steps', dest='planning_steps', type=int, default=4,
                         help='the number of planning steps')
 
-    parser.add_argument('--trained_model_path', dest='trained_model_path', type=str, default=None, help='the path for trained model')
+    parser.add_argument('--trained_model_path', dest='trained_model_path', type=str, default='./deep_dialog/old_checkpoints/d3q_rnn_5_1/dqn.model.epoch_final.ckpt', help='the path for trained model')
     parser.add_argument('-o', '--write_model_dir', dest='write_model_dir', type=str, default='./deep_dialog/checkpoints/', help='write model to disk')
     parser.add_argument('--save_check_point', dest='save_check_point', type=int, default=10, help='number of epochs for saving model')
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     parser.add_argument('--save_model', dest='save_model', type=int, default=1, help='whether to save models')
     parser.add_argument('--user_success_rate_threshold', dest='user_success_rate_threshold', type=float, default=1, help='success rate threshold for user model')
     parser.add_argument('--agent_success_rate_threshold', dest='agent_success_rate_threshold', type=float, default=1, help='success rate threshold for agent model')
-    parser.add_argument('--pretrain_discriminator', dest='pretrain_discriminator', type=int, default=1, help='whether to pretrain the discriminator')
+    parser.add_argument('--pretrain_discriminator', dest='pretrain_discriminator', type=int, default=0, help='whether to pretrain the discriminator')
     parser.add_argument('--discriminator_nn_type', dest='discriminator_nn_type', type=str, default='MLP', help='NN model structure of the discriminator [MLP, RNN]')
     parser.add_argument('--world_model_nn_type', dest='world_model_nn_type', type=str, default='MLP', help='NN model structure of the discriminator [MLP]')
     parser.add_argument('--train_discriminator', dest='train_discriminator', type=int, default=1, help='whether to train the discriminator')
@@ -108,18 +108,28 @@ def convertFile(originPath):
     return destiPath
 
 def ResetParams(train_model_type):
-    old_model_path = './deep_dialog/checkpoints/' + train_model_type + '/'
+    old_model_path = './deep_dialog/old_checkpoints/' + train_model_type + '/'
     with open(os.path.join(old_model_path, "model_config"), "r") as f:
         for arg in vars(args):
             value = getattr(args, arg)
-            print(arg,type(value))
+            print(arg,type(value),getattr(args, arg))
 
             params[arg] = getattr(args, arg)
             # f.write("{}: {}\n".format(arg, str(getattr(args, arg))))
         f.close()
+
+def save_to_file(content,originPath):
+    origin_str = os.path.splitext(originPath)
+    destiPath = origin_str[0] + ".json"
+    with open(destiPath, 'w') as output:
+        f = content
+        json.dump(f, output, indent=4)
+    return output
+
 seed = 2
 numpy.random.seed(seed)
 random.seed(seed)
+# set params as d3q_rnn_5_1 for predict.
 ResetParams("d3q_rnn_5_1")
 max_turn = params['max_turn']
 num_episodes = params['episodes']
@@ -149,7 +159,7 @@ for u_goal_id, u_goal in enumerate(all_goal_set):
 
 movie_kb_path = convertFile(params['movie_kb_path'])
 movie_kb = pickle.load(open(movie_kb_path, 'rb'), encoding='latin1')
-
+# save_to_file(movie_kb,movie_kb_path)
 act_set = text_to_dict(params['act_set'])
 slot_set = text_to_dict(params['slot_set'])
 
@@ -245,7 +255,8 @@ usersim_params['buffer_size_unit'] = params['buffer_size_unit']
 
 # print usr
 if usr == 0:# real user
-    user_sim = RuleSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params)
+    user_sim = RealUser(movie_dictionary, act_set, slot_set, goal_set, usersim_params)
+    user_sim_planning = None
 elif usr == 1:
     user_sim = RuleSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params)
     user_sim_planning = ModelBasedSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params, discriminator)
@@ -270,7 +281,8 @@ nlg_model.load_predefine_act_nl_pairs(diaact_nl_pairs)
 
 agent.set_nlg_model(nlg_model)
 user_sim.set_nlg_model(nlg_model)
-user_sim_planning.set_nlg_model(nlg_model)
+if(user_sim_planning != None):
+    user_sim_planning.set_nlg_model(nlg_model)
 
 ################################################################################
 # load trained NLU model
@@ -697,7 +709,7 @@ def run_episodes(count, status):
         import pickle
         pickle.dump(dialog_manager.user_actions_for_dump, open('user_actions.dump','wb'))
         print('warm_start finished, start RL training ...')
-
+    # 預訓練 辨別器
     if agt == 9 and params['pretrain_discriminator']:
         print("pretraining the discriminator...")
         # TODO: use argument
@@ -707,7 +719,7 @@ def run_episodes(count, status):
             print ("discriminator loss: {}".format(discriminator_loss))
 
     for episode in range(count):
-        # warm_start_for_model = params['grounded']
+        warm_start_for_model = params['grounded']
         # simulation_epoch_size = planning_steps + 1
         if params['model_type'] == 'D3Q' and episode == 0:
             simulation_epoch_with_gan_control_filter(3, True)

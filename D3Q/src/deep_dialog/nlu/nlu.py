@@ -20,6 +20,7 @@ class nlu:
         """ generate the Dia-Act with NLU model """
         
         if len(annot) > 0:
+            # 過濾字符串結尾的標點符號。
             tmp_annot = annot.strip('.').strip('?').strip(',').strip('!') 
             
             rep = self.parse_str_to_vector(tmp_annot)
@@ -71,7 +72,7 @@ class nlu:
         self.params = copy.deepcopy(model_params['params'])
         self.inverse_tag_dict = {self.tag_set[k]:k for k in self.tag_set.keys()}
         
-           
+
     def parse_str_to_vector(self, string):
         """ Parse string into vector representations """
         
@@ -89,7 +90,7 @@ class nlu:
         rep['word_vectors'] = vecs
         rep['raw_seq'] = string
         return rep
-
+    # intent vector to complete slot filling
     def parse_nlu_to_diaact(self, nlu_vector, string):
         """ Parse BIO and Intent into Dia-Act """
         

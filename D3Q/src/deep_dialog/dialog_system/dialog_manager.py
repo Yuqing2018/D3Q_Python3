@@ -40,7 +40,7 @@ class DialogManager:
         self.state_tracker.initialize_episode()
         self.running_user = self.user
         self.use_model = False
-        if not warm_start:
+        if warm_start:
             self.running_user = self.user_planning
             self.use_model = True
         else:
@@ -65,7 +65,7 @@ class DialogManager:
 
     def next_turn(self,
                   record_training_data=True,
-                  record_training_data_for_user=True,
+                  record_training_data_for_user=False,
                   simulation_for_discriminator=False,
                   filter_experience_by_discriminator=False
                   ):

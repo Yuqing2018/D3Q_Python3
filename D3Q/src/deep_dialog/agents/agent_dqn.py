@@ -49,7 +49,7 @@ class AgentDQN(Agent):
         self.refine_state = True
         self.state_dimension = 2 * self.act_cardinality + 7 * self.slot_cardinality + 3 + self.max_turn
         if self.refine_state:
-            self.state_dimension = 193
+            self.state_dimension = 2 * self.act_cardinality + 5 * self.slot_cardinality + 1 + self.max_turn
 
         self.dqn = DQN(self.state_dimension, self.hidden_size, self.num_actions)
         self.clone_dqn = copy.deepcopy(self.dqn)
@@ -79,15 +79,15 @@ class AgentDQN(Agent):
                     # DDQ, D3Q
                     self.max_user_buffer_size = self.size_unit
                     self.max_world_model_buffer_size = self.size_unit
-        '''
         # Prediction Mode: load trained DQN model
         if params['trained_model_path'] != None:
             # self.dqn.model = copy.deepcopy(self.load_trained_DQN(params['trained_model_path']))
             # self.clone_dqn = copy.deepcopy(self.dqn)
-            self.dqn.load(params['trained_model_path'])
+            self.dqn.load_model(params['trained_model_path'])
+            self.clone_dqn = copy.deepcopy(self.dqn)
             self.predict_mode = True
             self.warm_start = 2
-        '''
+
         self.available_actions = range(self.num_actions)
         self.new_actions = range(self.num_actions)
 
@@ -234,9 +234,9 @@ class AgentDQN(Agent):
                     self.warm_start = 2
                 return self.rule_policy()
             else:
-                return self.available_actions[
-                        np.argmax(self.dqn.predict(representation)[self.available_actions])
-                    ]
+                result = self.dqn.predict(representation)[self.available_actions]
+                max_index = np.argmax(result)
+                return self.available_actions[max_index]
 
     def rule_policy(self):
         """ Rule Policy """

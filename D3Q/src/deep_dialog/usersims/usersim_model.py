@@ -28,7 +28,7 @@ class ModelBasedSimulator(UserSimulator):
         self.num_actions_user = len(self.feasible_actions_users)
 
         self.max_turn = params['max_turn'] + 4
-        self.state_dimension = 2 * self.act_cardinality + 9 * self.slot_cardinality + 3 + self.max_turn
+        self.state_dimension = 2    * self.act_cardinality + 9 * self.slot_cardinality + 3 + self.max_turn
 
         self.slot_err_probability = params['slot_err_probability']
         self.slot_err_mode = params['slot_err_mode']

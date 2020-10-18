@@ -75,12 +75,14 @@ class DQN(nn.Module):
 
     def predict(self, inputs):
         inputs = self.Variable(torch.from_numpy(inputs).float())
-        return self.model(inputs, True).cpu().data.numpy()[0]
+        predict_result= self.model(inputs, True).cpu().data.numpy()
+        return predict_result[0]
 
     def save_model(self, model_path):
         torch.save(self.model.state_dict(), model_path)
         print ("model saved.")
 
     def load_model(self, model_path):
-        self.model.load_state_dict(torch.load(model_path))
+        ckpt = torch.load(model_path,map_location=torch.device('cpu'))
+        self.model.load_state_dict(ckpt)
         print ("model loaded.")

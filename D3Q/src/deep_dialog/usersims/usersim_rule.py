@@ -58,7 +58,7 @@ class RuleSimulator(UserSimulator):
         self.goal = self._sample_goal(self.start_set)
         self.goal['request_slots']['ticket'] = 'UNK'
         self.constraint_check = dialog_config.CONSTRAINT_CHECK_FAILURE
-  
+
         """ Debug: build a fake goal mannually """
         #self.debug_falk_goal()
         
@@ -336,7 +336,6 @@ class RuleSimulator(UserSimulator):
         
     def response_inform(self, system_action):
         """ Response for Inform (System Action) """
-        
         if 'taskcomplete' in system_action['inform_slots'].keys(): # check all the constraints from agents with user goal
             self.state['diaact'] = "thanks"
             #if 'ticket' in self.state['rest_slots']: self.state['request_slots']['ticket'] = 'UNK'

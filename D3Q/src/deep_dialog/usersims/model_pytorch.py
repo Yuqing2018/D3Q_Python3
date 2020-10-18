@@ -28,7 +28,7 @@ class SimulatorModel(nn.Module):
         self.agent_action_size = agent_action_size
         self.nn_type = nn_type
         self.D = discriminator
-        state_size = 250
+        state_size = 270
 
         if nn_type == "MLP":
             self.s_enc_layer = nn.Linear(state_size, hidden_size)
